@@ -1,0 +1,113 @@
+version: '3'
+
+vars:
+  # Google Cloud configuration
+  PROJECT_ID: sandbox-tomvdb-458407
+  SERVICE_NAME: gtm-agent
+  REPOSITORY_NAME: "{{ .SERVICE_NAME }}-repo"
+  IMAGE_NAME: "{{ .SERVICE_NAME }}-image"
+  DOCKER_TAG_NAME: "{{ .SERVICE_NAME }}-image"
+  LOCATION: europe-west1
+  SERVICE_ACCOUNT_NAME: "{{ .REPOSITORY_NAME }}-sa"
+  SERVICE_ACCOUNT_EMAIL: "{{ .SERVICE_ACCOUNT_NAME }}@{{ .PROJECT_ID }}.iam.gserviceaccount.com"
+  SERVICE_URL: "https://gtm-agent-354636185201.europe-west1.run.app"
+
+
+tasks:
+  create-docker:
+    desc: "Build the Docker image"
+    cmds:
+      - echo "Building the Docker container..."
+      - docker build --tag {{ .IMAGE_NAME }}:latest .
+
+  tagging-image:
+    desc: "Tag the Docker image"
+    cmds:
+      - echo "Tagging the image..."
+      - docker tag {{ .DOCKER_TAG_NAME }}:latest {{ .LOCATION }}-docker.pkg.dev/{{ .PROJECT_ID }}/{{ .REPOSITORY_NAME }}/{{ .DOCKER_TAG_NAME }}
+
+  create-repo:
+    desc: "Build the Docker image"
+    cmds:
+      - echo "Checking if repository exists..."
+      - if ! gcloud artifacts repositories describe {{ .REPOSITORY_NAME }} --location={{ .LOCATION }}; then
+        echo "Creating repository...";
+        gcloud artifacts repositories create {{ .REPOSITORY_NAME }} --repository-format=docker --location={{ .LOCATION }};
+        else
+        echo "Repository {{ .REPOSITORY_NAME }} already exists.";
+        fi
+
+  create-service-account:
+    desc: "Create the service account if it doesn't exist"
+    cmds:
+      - echo "Checking if service account exists..."
+      - |
+        if gcloud iam service-accounts describe {{ .SERVICE_ACCOUNT_EMAIL }} --project={{ .PROJECT_ID }} > /dev/null 2>&1; then
+          echo "Service account already exists!"
+        else
+          gcloud iam service-accounts create {{ .SERVICE_ACCOUNT_NAME }} --project={{ .PROJECT_ID }}
+        fi
+
+  grant-secret-access:
+    desc: "Grant Secret Manager and Service Account Token Creator access to the service account"
+    deps: [create-service-account]
+    cmds:
+      - echo "Granting Secret Manager access..."
+      - |
+        gcloud secrets add-iam-policy-binding oauth_client_secret \
+          --project={{ .PROJECT_ID }} \
+          --member="serviceAccount:{{ .SERVICE_ACCOUNT_EMAIL }}" \
+          --role="roles/secretmanager.secretAccessor"
+        gcloud secrets add-iam-policy-binding oauth_client_id \
+          --project={{ .PROJECT_ID }} \
+          --member="serviceAccount:{{ .SERVICE_ACCOUNT_EMAIL }}" \
+          --role="roles/secretmanager.secretAccessor"
+        gcloud secrets add-iam-policy-binding openrouter_api_key \
+          --project={{ .PROJECT_ID }} \
+          --member="serviceAccount:{{ .SERVICE_ACCOUNT_EMAIL }}" \
+          --role="roles/secretmanager.secretAccessor"
+
+      - echo "Secret Manager access granted!"
+      - echo "Granting Service Account Token Creator access..."
+      - |
+        gcloud iam service-accounts add-iam-policy-binding {{ .SERVICE_ACCOUNT_EMAIL }} \
+          --project={{ .PROJECT_ID }} \
+          --member="serviceAccount:{{ .SERVICE_ACCOUNT_EMAIL }}" \
+          --role="roles/iam.serviceAccountTokenCreator"
+      - echo "Service Account Token Creator access granted!"
+
+  pushing-image:
+    desc: "Push the Docker image to the Google Cloud registry"
+    cmds:
+      - echo "Pushing the image..."
+      - docker push {{ .LOCATION }}-docker.pkg.dev/{{ .PROJECT_ID }}/{{ .REPOSITORY_NAME }}/{{ .DOCKER_TAG_NAME }}
+
+  run-deploy:
+    desc: "Deploy the service to Cloud Run"
+    cmds:
+      - echo "Deploying the image..."
+      - |
+        gcloud run deploy {{ .SERVICE_NAME }} \
+        --image {{ .LOCATION }}-docker.pkg.dev/{{ .PROJECT_ID }}/{{ .REPOSITORY_NAME }}/{{ .DOCKER_TAG_NAME }} \
+        --platform managed \
+        --region {{ .LOCATION }} \
+        --memory 8Gi \
+        --cpu 4 \
+        --allow-unauthenticated \
+        --service-account {{ .SERVICE_ACCOUNT_NAME }}@{{ .PROJECT_ID }}.iam.gserviceaccount.com \
+        --set-secrets OAUTH_CLIENT_SECRET=oauth_client_secret:latest \
+        --set-secrets OAUTH_CLIENT_ID=oauth_client_id:latest \
+        --set-secrets MODEL_KEY=openrouter_api_key:latest \
+        --set-env-vars REDIRECT_URI={{ .SERVICE_URL}}/oauth2callback
+
+  deploy:
+    desc: "Build and deploy the service"
+    cmds:
+      - task: create-docker
+      - task: tagging-image
+      - task: create-repo
+      - task: create-service-account
+      - task: grant-secret-access
+      - task: pushing-image
+      - task: run-deploy
+      - echo "Service deployed successfully!"

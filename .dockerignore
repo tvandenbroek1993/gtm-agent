@@ -1,0 +1,6 @@
+.env
+credentials.json
+
+.idea/
+cert.pem
+*credentials*

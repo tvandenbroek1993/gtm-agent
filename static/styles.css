@@ -1,0 +1,97 @@
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Add smooth transitions to interactive elements */
+button, a, input, select {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Animated Gradient Background for the main chat area  */
+.animated-gradient {
+    background: linear-gradient(-45deg, #111827, #1f2937, #1e3a8a, #1f2937);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+}
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+
+/* Base chat bubble style */
+.chat-bubble {
+    max-width: 80%;
+    word-wrap: break-word;
+    padding: 12px 18px;
+    border-radius: 20px;
+    line-height: 1.6;
+    opacity: 0; /* Start hidden for animation */
+}
+
+/* Animation for bubbles */
+@keyframes slideInFromLeft {
+    0% { transform: translateX(-20px) scale(0.95); opacity: 0; }
+    100% { transform: translateX(0) scale(1); opacity: 1; }
+}
+@keyframes slideInFromRight {
+    0% { transform: translateX(20px) scale(0.95); opacity: 0; }
+    100% { transform: translateX(0) scale(1); opacity: 1; }
+}
+
+
+/* Agent-specific bubble style */
+.chat-bubble-agent {
+    background-color: #374151; /* bg-gray-700 */
+    color: #e5e7eb; /* text-gray-200 */
+    border-top-left-radius: 6px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    animation: slideInFromLeft 0.4s ease-out forwards;
+}
+
+/* User-specific bubble style */
+.chat-bubble-user {
+    color: #ffffff;
+    background-image: linear-gradient(to right, #7c3aed, #2563eb); /* gradient from-purple-600 to-blue-600 */
+    border-top-right-radius: 6px;
+    animation: slideInFromRight 0.4s ease-out forwards;
+}
+
+/* Custom Scrollbar for a cleaner, modern look */
+.chat-container::-webkit-scrollbar {
+    width: 8px;
+}
+.chat-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+.chat-container::-webkit-scrollbar-thumb {
+    background: #4b5563; /* gray-600 */
+    border-radius: 4px;
+}
+.chat-container::-webkit-scrollbar-thumb:hover {
+    background: #6b7280; /* gray-500 */
+}
+
+/* Enhanced Loading Spinner Animation */
+.loader {
+    border: 3px solid #4b5563; /* border-gray-600 */
+    border-top-color: transparent;
+    border-right-color: transparent;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 0.8s linear infinite, color-change 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes color-change {
+    0% { border-left-color: #8b5cf6; border-bottom-color: #8b5cf6; } /* purple */
+    50% { border-left-color: #3b82f6; border-bottom-color: #3b82f6;} /* blue */
+    100% { border-left-color: #8b5cf6; border-bottom-color: #8b5cf6;} /* purple */
+}

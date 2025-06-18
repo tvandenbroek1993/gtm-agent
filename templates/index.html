@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>GTM Agent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="bg-gray-900 text-gray-200 antialiased">
+
+    <div id="login-modal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-sm">
+        <div class="relative mx-auto p-8 border border-purple-500/20 w-full max-w-md shadow-2xl shadow-purple-500/10 rounded-2xl bg-gray-800">
+            <div class="text-center">
+                 <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-purple-500/20">
+                    <svg class="h-6 w-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                </div>
+                <h3 class="text-xl leading-6 font-bold text-white mt-4">Authentication Required</h3>
+                <div class="mt-2 px-7 py-3">
+                    <p class="text-sm text-gray-400">
+                        Please log in with your Google account to access the GTM Agent.
+                    </p>
+                </div>
+                <div class="items-center px-4 py-3">
+                    <a href="/login" class="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-500 text-white text-base font-medium rounded-lg w-full inline-block shadow-lg shadow-purple-500/20 hover:from-purple-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-purple-500 transition-all duration-300 transform hover:scale-105">
+                        Login with Google
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex flex-col md:flex-row h-screen">
+        <aside class="w-full md:w-96 bg-gray-800/50 backdrop-blur-sm p-6 border-r border-white/10 flex flex-col flex-shrink-0">
+            <header class="mb-8">
+                <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">GTM Agent</h1>
+                <p class="text-sm text-gray-400">Your AI-powered tag management assistant.</p>
+            </header>
+
+            <nav class="space-y-6 flex-grow">
+                <div>
+                    <label for="account-select" class="block text-sm font-medium text-gray-400 mb-1">Account</label>
+                    <select id="account-select" class="w-full p-3 bg-gray-700 border border-gray-600 text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 transition" disabled>
+                        <option>Login to load accounts...</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="container-select" class="block text-sm font-medium text-gray-400 mb-1">Container</label>
+                    <select id="container-select" class="w-full p-3 bg-gray-700 border border-gray-600 text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 transition" disabled>
+                        <option>Select an account first</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="workspace-select" class="block text-sm font-medium text-gray-400 mb-1">Workspace</label>
+                    <select id="workspace-select" class="w-full p-3 bg-gray-700 border border-gray-600 text-white rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 transition" disabled>
+                        <option>Select a container first</option>
+                    </select>
+                </div>
+            </nav>
+
+            <div id="user-profile" class="pt-6 border-t border-white/10 hidden">
+                 <div class="flex items-center">
+                    <img id="user-picture" class="h-10 w-10 rounded-full mr-3 object-cover" src="" alt="User Avatar">
+                    <div>
+                        <p id="user-name" class="text-sm font-semibold text-white">User Name</p>
+                        <p id="user-email" class="text-xs text-gray-400">user@email.com</p>
+                    </div>
+                </div>
+                <a href="/logout" class="flex items-center justify-center w-full mt-4 p-3 bg-gray-700/50 hover:bg-red-800/60 text-gray-300 hover:text-white font-medium rounded-lg transition-colors duration-200 group">
+                    <svg class="w-5 h-5 mr-3 text-gray-400 group-hover:text-white transition-colors" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col animated-gradient">
+            <header id="chat-header" class="bg-gray-800/50 backdrop-blur-sm border-b border-white/10 p-4 flex-shrink-0">
+                 <h2 id="chat-title" class="text-lg font-semibold text-white">Welcome</h2>
+                 <p id="chat-subtitle" class="text-sm text-gray-400">Please select a context from the sidebar to begin.</p>
+            </header>
+
+            <div id="chat-container" class="flex-grow p-6 overflow-y-auto chat-container">
+                </div>
+
+            <div class="p-4">
+                <div class="flex items-center space-x-3">
+                    <input type="text" id="chat-input" class="flex-grow p-4 bg-gray-800 border border-gray-700 rounded-full text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:outline-none transition" placeholder="Please log in to begin..." disabled>
+                    <button id="send-btn" class="bg-gradient-to-r from-purple-600 to-blue-500 text-white p-4 rounded-full font-semibold shadow-lg shadow-purple-500/20 hover:from-purple-700 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 disabled:shadow-none disabled:cursor-not-allowed transition-all transform hover:scale-110">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='javascript.js') }}"></script>
+</body>
+</html>
