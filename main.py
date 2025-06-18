@@ -212,7 +212,7 @@ if __name__ == '__main__':
     ssl_context = ("../cert.pem", "../key.pem") if use_ssl else None
 
     if ENVIRONMENT == "production":
-        print("🚀 Starting GTM Agent in production mode...")
+        print("🚀 Starting GTM Agent in production mode..")
         app.run(host="0.0.0.0", port=port)
     else:
         # Ensure use_ssl and ssl_context are correctly defined and used
