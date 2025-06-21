@@ -95,3 +95,40 @@ button, a, input, select {
     50% { border-left-color: #3b82f6; border-bottom-color: #3b82f6;} /* blue */
     100% { border-left-color: #8b5cf6; border-bottom-color: #8b5cf6;} /* purple */
 }
+
+/* Animation for pulsing effect */
+@keyframes pulse-border-purple {
+    0% {
+        box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7); /* purple-500 */
+        border-color: rgba(139, 92, 246, 0.5);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(139, 92, 246, 0);
+        border-color: rgba(139, 92, 246, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(139, 92, 246, 0);
+        border-color: rgba(139, 92, 246, 0);
+    }
+}
+
+.input-pulsing-border {
+    animation: pulse-border-purple 1.5s infinite;
+}
+
+/* Specific pulse for button, if desired (can be added to .send-btn-pulsing below) */
+@keyframes pulse-shadow {
+    0% {
+        box-shadow: 0 4px 6px -1px rgba(139, 92, 246, 0.4), 0 2px 4px -1px rgba(139, 92, 246, 0.2);
+    }
+    50% {
+        box-shadow: 0 4px 10px 2px rgba(139, 92, 246, 0.8), 0 2px 6px 1px rgba(139, 92, 246, 0.4);
+    }
+    100% {
+        box-shadow: 0 4px 6px -1px rgba(139, 92, 246, 0.4), 0 2px 4px -1px rgba(139, 92, 246, 0.2);
+    }
+}
+
+.send-btn-pulsing {
+    animation: pulse-shadow 1.5s infinite ease-in-out;
+}

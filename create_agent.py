@@ -1,4 +1,4 @@
-from tools import *
+from google_tag_manager_agent.tools import *
 from dotenv import load_dotenv
 from openai import OpenAI
 import os
@@ -7,103 +7,101 @@ load_dotenv()
 MODEL_KEY = os.getenv("MODEL_KEY")
 
 def create_agent():
-    """Initializes the OpenAI client and defines the agent's tools and their schemas."""
     client = OpenAI(
        base_url="https://openrouter.ai/api/v1",
        api_key=MODEL_KEY,
     )
 
     available_tools = {
-       "get_information": get_information,
-       "get_specific_item": get_specific_item,
-       "list_container_versions": list_container_versions,
-       "get_container_version": get_container_version
+       "list_gtm_items": list_gtm_items,
+       "get_gtm_item": get_gtm_item,
+       "compare_gtm_versions": compare_gtm_versions,
+       "update_gtm_tag_name": update_gtm_tag_name,
     }
 
     tools_schema = [
        {
           "type": "function",
           "function": {
-             "name": "get_information",
-             "description": "Get a LIST of all tags, variables, built-in variables, triggers, or folders. Use this to find the names and IDs of items within a specific workspace.",
+             "name": "list_gtm_items",
+             "description": "Get a LIST of all tags, variables, built-in variables, triggers, folders, or container versions from a GTM workspace or container. Use this to find the names and IDs of items.",
              "parameters": {
                 "type": "object",
                 "properties": {
                    "account_id": {"type": "string", "description": "The GTM account ID."},
                    "container_id": {"type": "string", "description": "The GTM container ID."},
-                   "workspace_id": {"type": "string", "description": "The GTM workspace ID."},
+                   "workspace_id": {"type": "string",
+                                    "description": "The GTM workspace ID. REQUIRED for tags, variables, built_in_variables, triggers, and folders. NOT USED for 'versions'."},
                    "information_type": {
                       "type": "string",
-                      "description": "The type of items to list.",
-                      "enum": ["tags", "variables", "built_in_variables", "triggers", "folders"]
+                      "description": "The type of GTM items to list.",
+                      "enum": ["tags", "variables", "built_in_variables", "triggers", "folders", "versions"]
                    }
                 },
-                "required": ["account_id", "container_id", "workspace_id", "information_type"],
+                "required": ["account_id", "container_id", "information_type"],
              },
           },
        },
        {
           "type": "function",
           "function": {
-             "name": "get_specific_item",
-             "description": "Get the full, detailed configuration of a SINGLE tag, variable, trigger, or folder from a workspace using its specific ID. Does NOT work for built-in variables.",
+             "name": "get_gtm_item",
+             "description": "Get the full, detailed configuration of a SINGLE GTM item (tag, variable, trigger, folder, or container version) using its specific ID. Does NOT work for built-in variables.",
              "parameters": {
                 "type": "object",
                 "properties": {
                    "account_id": {"type": "string", "description": "The GTM account ID."},
                    "container_id": {"type": "string", "description": "The GTM container ID."},
-                   "workspace_id": {"type": "string", "description": "The GTM workspace ID."},
-                   "item_type": {
+                   "workspace_id": {"type": "string",
+                                    "description": "The GTM workspace ID. REQUIRED for tags, variables, triggers, and folders. NOT USED for 'versions'."},
+                   "information_type": {
                       "type": "string",
-                      "description": "The type of the item to get. Must be singular.",
-                      "enum": ["tag", "variable", "trigger", "folder"]
+                      "description": "The type of the GTM item to get details for.",
+                      "enum": ["tags", "variables", "triggers", "folders", "versions"]
                    },
                    "item_id": {
                       "type": "string",
-                      "description": "The unique numerical ID of the specific item to retrieve."
+                      "description": "The unique numerical ID of the specific GTM item to retrieve. Use 'published' as the item_id to get the currently live version when information_type is 'versions'."
                    }
                 },
-                "required": ["account_id", "container_id", "workspace_id", "item_type", "item_id"],
+                "required": ["account_id", "container_id", "information_type", "item_id"],
              },
           },
        },
        {
           "type": "function",
           "function": {
-             "name": "list_container_versions",
-             "description": "Get a list of all version headers for a GTM Container. This is useful for seeing the history of a container and finding specific version IDs.",
+             "name": "compare_gtm_versions",
+             "description": "Compares two Google Tag Manager container versions and reports additions, deletions, and modifications of tags, triggers, and variables. The output provides the new version ID, its timestamp, and lists of added, deleted, and modified tags, triggers, and variables.",
              "parameters": {
                 "type": "object",
                 "properties": {
-                   "account_id": {"type": "string", "description": "The GTM Account ID."},
-                   "container_id": {"type": "string", "description": "The GTM Container ID."},
-                   "include_deleted": {
-                      "type": "boolean",
-                      "description": "Optional. Set to true to also retrieve deleted (archived) versions. Defaults to false."
-                   }
+                   "account_id": {"type": "string", "description": "The GTM account ID."},
+                   "container_id": {"type": "string", "description": "The GTM container ID."},
+                   "version_id_old": {"type": "string", "description": "The ID of the older GTM container version."},
+                   "version_id_new": {"type": "string", "description": "The ID of the newer GTM container version."}
                 },
-                "required": ["account_id", "container_id"],
+                "required": ["account_id", "container_id", "version_id_old", "version_id_new"],
              },
           },
        },
        {
           "type": "function",
           "function": {
-             "name": "get_container_version",
-             "description": "Get the full, detailed configuration of a SINGLE container version using its specific version ID. Use 'published' as the version_id to get the currently live version.",
+             "name": "update_gtm_tag_name",
+             "description": "Updates the display name of a specific Google Tag Manager (GTM) tag within a workspace.",
              "parameters": {
                 "type": "object",
                 "properties": {
-                   "account_id": {"type": "string", "description": "The GTM Account ID."},
-                   "container_id": {"type": "string", "description": "The GTM Container ID."},
-                   "version_id": {
-                      "type": "string",
-                      "description": "The unique ID of the specific container version to retrieve. Use 'published' to get the current live version. Retrieved from the list container versions tool"
-                   }
+                   "account_id": {"type": "string", "description": "The GTM account ID."},
+                   "container_id": {"type": "string", "description": "The GTM container ID."},
+                   "workspace_id": {"type": "string", "description": "The GTM workspace ID where the tag is located."},
+                   "tag_id": {"type": "string", "description": "The ID of the tag to be updated."},
+                   "new_tag_name": {"type": "string", "description": "The new display name for the tag."}
                 },
-                "required": ["account_id", "container_id", "version_id"],
+                "required": ["account_id", "container_id", "workspace_id", "tag_id", "new_tag_name"],
              },
           },
-       }
+       },
     ]
     return client, available_tools, tools_schema

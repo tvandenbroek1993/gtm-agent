@@ -82,18 +82,19 @@
 
             <div id="chat-container" class="flex-grow p-6 overflow-y-auto chat-container">
                 </div>
-
             <div class="p-4">
-                <div class="flex items-center space-x-3">
-                    <input type="text" id="chat-input" class="flex-grow p-4 bg-gray-800 border border-gray-700 rounded-full text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:outline-none transition" placeholder="Please log in to begin..." disabled>
-                    <button id="send-btn" class="bg-gradient-to-r from-purple-600 to-blue-500 text-white p-4 rounded-full font-semibold shadow-lg shadow-purple-500/20 hover:from-purple-700 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 disabled:shadow-none disabled:cursor-not-allowed transition-all transform hover:scale-110">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                    </button>
-                </div>
+                 <div class="flex items-center space-x-3">
+                     <input type="text" id="chat-input" class="flex-grow p-4 bg-gray-800 border border-gray-700 rounded-full text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:outline-none transition" placeholder="Please log in to begin..." disabled>
+                     <button id="send-btn" class="bg-gradient-to-r from-purple-600 to-blue-500 text-white p-4 rounded-full font-semibold shadow-lg shadow-purple-500/20 hover:from-purple-700 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 disabled:shadow-none disabled:cursor-not-allowed transition-all transform hover:scale-110">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                     </button>
+                 </div>
+                 <div id="agent-status-message" class="text-sm text-gray-400 mt-2 text-center opacity-0 transition-opacity duration-300">
+                     Agent is thinking...
+                 </div>
             </div>
         </main>
     </div>
-
     <script src="{{ url_for('static', filename='javascript.js') }}"></script>
 </body>
 </html>

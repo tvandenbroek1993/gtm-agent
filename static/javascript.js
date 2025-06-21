@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const chatContainer = document.getElementById('chat-container');
     const loginModal = document.getElementById('login-modal');
     const userProfileDiv = document.getElementById('user-profile');
+    const agentStatusMessage = document.getElementById('agent-status-message'); // NEW
 
     // --- State Management ---
     let selectedContext = {
@@ -16,10 +17,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         workspaceId: null,
     };
     let chatHistory = [];
+    let statusMessageTimeout; // NEW: To delay showing status message
 
     // --- API Configuration ---
     // Use this URL for your deployed backend
-//    const API_BASE_URL = 'https://gtm-agent-354636185201.europe-west1.run.app';
+    //    const API_BASE_URL = 'https://gtm-agent-354636185201.europe-west1.run.app';
     const API_BASE_URL = 'http://127.0.0.1:5000'
     // Use this URL for local testing
     // const API_BASE_URL = 'http://127.0.0.1:5000';
@@ -96,23 +98,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         const agentIcon = `<div class="bg-gray-700 text-purple-400 rounded-full h-8 w-8 flex-shrink-0 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" /></svg></div>`;
         const userIcon = `<div class="bg-gray-700 text-white rounded-full h-8 w-8 flex-shrink-0 flex items-center justify-center order-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg></div>`;
 
-        if (sender === 'loading') {
-            wrapper.id = 'loading-indicator';
-            wrapper.className = 'flex items-start gap-3 mb-5';
-            wrapper.innerHTML = `${agentIcon}<div class="bg-gray-700 p-4 rounded-lg shadow-md chat-bubble flex items-center"><div class="loader"></div></div>`;
-        } else {
-            const isUser = sender === 'user';
-            wrapper.className = `flex items-start gap-3 mb-5 ${isUser ? 'justify-end' : ''}`;
-            const bubbleHTML = `<div class="chat-bubble ${isUser ? 'chat-bubble-user order-1' : 'chat-bubble-agent'}"><p class="text-sm">${message.replace(/\n/g, '<br>')}</p></div>`;
-            wrapper.innerHTML = (isUser ? '' : agentIcon) + bubbleHTML + (isUser ? userIcon : '');
-        }
+        // Removed the specific 'loading' sender for a more general approach
+        const isUser = sender === 'user';
+        wrapper.className = `flex items-start gap-3 mb-5 ${isUser ? 'justify-end' : ''}`;
+        const bubbleHTML = `<div class="chat-bubble ${isUser ? 'chat-bubble-user order-1' : 'chat-bubble-agent'}"><p class="text-sm">${message.replace(/\n/g, '<br>')}</p></div>`;
+        wrapper.innerHTML = (isUser ? '' : agentIcon) + bubbleHTML + (isUser ? userIcon : '');
 
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    function removeLoadingIndicator() {
-        const el = document.getElementById('loading-indicator');
-        if (el) el.remove();
+    // NEW: Functions for status message and pulsing animations
+    function showAgentThinkingState() {
+        // Apply pulsing animation to input border
+        chatInput.classList.add('input-pulsing-border');
+        // Apply pulsing animation to send button shadow
+        sendBtn.classList.add('send-btn-pulsing');
+
+        // Show status message with a slight delay
+        clearTimeout(statusMessageTimeout);
+        statusMessageTimeout = setTimeout(() => {
+            agentStatusMessage.textContent = 'Agent is thinking...';
+            agentStatusMessage.classList.remove('opacity-0');
+        }, 300); // Only show if it takes more than 300ms
+    }
+
+    function hideAgentThinkingState() {
+        // Remove pulsing animations
+        chatInput.classList.remove('input-pulsing-border');
+        sendBtn.classList.remove('send-btn-pulsing');
+
+        // Hide status message
+        clearTimeout(statusMessageTimeout);
+        agentStatusMessage.classList.add('opacity-0');
     }
 
     function showLoginModal() {
@@ -136,7 +153,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         chatInput.value = '';
         chatInput.disabled = true;
         sendBtn.disabled = true;
-        addMessageToChat('', 'loading');
+        showAgentThinkingState(); // NEW: Show thinking state here
 
         const contextForAgent = {
             ...selectedContext,
@@ -148,7 +165,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { answer, history } = await runAgent(question, chatHistory, contextForAgent);
         chatHistory = history;
 
-        removeLoadingIndicator();
+        hideAgentThinkingState(); // NEW: Hide thinking state here
         addMessageToChat(answer, 'agent');
 
         chatInput.disabled = false;
